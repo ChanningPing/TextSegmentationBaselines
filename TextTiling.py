@@ -4,7 +4,7 @@ from nltk.corpus import brown
 import jieba
 
 
-with open('flypaper_commentsOnly.txt', 'r') as file:
+with open('flypaper_short.txt', 'r') as file:
     comments = file.read()
 
 #segment the word
