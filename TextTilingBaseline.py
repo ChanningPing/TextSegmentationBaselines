@@ -106,8 +106,10 @@ class TextTilingTokenizer(TokenizerI):
         for sent in sentences:
             tokens = jieba.cut(sent)#lines to words
             sent = (" ".join(tokens))
-            no_punctuation_sent = re.sub(ur"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。↓～?？、~@#￥%……&*（）:：；《）《》“”()»〔〕-]+", " ",
-                                         sent.decode("utf-8"))#remove punctuations
+            #no_punctuation_sent = re.sub(ur"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，♡→≧￣◇￣;▽≦。↓～?？、~@#￥%……&*（）:：；《）《》“”()»〔〕-]+", " ",
+                                     #sent.decode("utf-8"))#remove punctuations
+            regex = re.compile(ur'[^a-zA-Z0-9\u4e00-\u9fff]')#remove everything other than chinese character, letter, and number
+            no_punctuation_sent = regex.sub(' ', sent.decode("utf-8"))
             print(no_punctuation_sent)
             no_punctuation_sentences.append(no_punctuation_sent)#add no punctuation lines to a list
 
@@ -134,7 +136,7 @@ class TextTilingTokenizer(TokenizerI):
             ts.wrdindex_list = [wi for wi in ts.wrdindex_list
                                 if wi[0] not in self.stopwords]
         '''
-        for ts in tokseqs:
+        for ts in tokseqs:#test of pseudo sequence is right
             print(ts.wrdindex_list)
 
         token_table = self._create_token_table(tokseqs, nopunct_par_breaks)
@@ -475,9 +477,14 @@ def smooth(x,window_len=11,window='flat'):
 
 
 def demo(text=None):
+    '''
+    use the bounary together with the pseudo sentences to evaluate the quality of segmentation.
+    :param text:
+    :return:
+    '''
     from nltk.corpus import brown
     from matplotlib import pylab
-    tt = TextTilingTokenizer(w=10,k=8,demo_mode=True)
+    tt = TextTilingTokenizer(w=40,k=20,demo_mode=True)
     with open('flypaper_short.txt', 'r') as file:
         text = file.read()
     if text is None: text = brown.raw()[:10000]
