@@ -106,7 +106,7 @@ class TextTilingTokenizer(TokenizerI):
         for sent in sentences:
             tokens = jieba.cut(sent)#lines to words
             sent = (" ".join(tokens))
-            no_punctuation_sent = re.sub(ur"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）：；《）《》“”()»〔〕-]+", " ",
+            no_punctuation_sent = re.sub(ur"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。↓～?？、~@#￥%……&*（）:：；《）《》“”()»〔〕-]+", " ",
                                          sent.decode("utf-8"))#remove punctuations
             print(no_punctuation_sent)
             no_punctuation_sentences.append(no_punctuation_sent)#add no punctuation lines to a list
@@ -129,9 +129,13 @@ class TextTilingTokenizer(TokenizerI):
         #words = _stem_words(words)
 
         # Filter stopwords
+        '''
         for ts in tokseqs:
             ts.wrdindex_list = [wi for wi in ts.wrdindex_list
                                 if wi[0] not in self.stopwords]
+        '''
+        for ts in tokseqs:
+            print(ts.wrdindex_list)
 
         token_table = self._create_token_table(tokseqs, nopunct_par_breaks)
         # End of the Tokenization step
@@ -245,8 +249,8 @@ class TextTilingTokenizer(TokenizerI):
         w = self.w
         wrdindex_list = []
         #matches = re.finditer("\w+", text)
-        #matches = re.finditer(ur'[\u4e00-\u9fff]+|[a-zA-Z]+|[0-9]]', text)
-        matches = re.finditer('[^ ]', text)
+        matches = re.finditer(ur'[\u4e00-\u9fff]+|[a-zA-Z0-9]+|[0-9]+]', text)
+        #matches = re.finditer('[^ ]', text)
         for match in matches:
             wrdindex_list.append((match.group(), match.start()))
         return [TokenSequence(i/w, wrdindex_list[i:i+w])
