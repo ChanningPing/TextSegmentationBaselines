@@ -17,7 +17,7 @@ for sentence in sentences:
     for token in tokens:
         count += 1
         block = block + token + ' '
-        if count==30:
+        if count==10:
             count = 0
             print(block)
             block = ''

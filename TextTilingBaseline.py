@@ -116,6 +116,10 @@ class TextTilingTokenizer(TokenizerI):
         nopunct_par_breaks = self._mark_paragraph_breaks(nopunct_text)
 
         tokseqs = self._divide_to_tokensequences(nopunct_text)
+        #print('===========tokseqs')
+        #for token in tokseqs:
+            #print(token.wrdindex_list)
+
 
         # The morphological stemming step mentioned in the TextTile
         # paper is not implemented.  A comment in the original C
@@ -135,6 +139,7 @@ class TextTilingTokenizer(TokenizerI):
         # Lexical score determination
         if self.similarity_method == BLOCK_COMPARISON:
             gap_scores = self._block_comparison(tokseqs, token_table)
+            print(len(gap_scores))
         elif self.similarity_method == VOCABULARY_INTRODUCTION:
             raise NotImplementedError("Vocabulary introduction not implemented")
 
@@ -170,6 +175,7 @@ class TextTilingTokenizer(TokenizerI):
         return segmented_text
 
     def _block_comparison(self, tokseqs, token_table):
+        #product of 2 block
         "Implements the block comparison method"
         def blk_frq(tok, block):
             ts_occs = filter(lambda o: o[0] in block,
@@ -238,7 +244,9 @@ class TextTilingTokenizer(TokenizerI):
         "Divides the text into pseudosentences of fixed size"
         w = self.w
         wrdindex_list = []
-        matches = re.finditer("\w+", text)
+        #matches = re.finditer("\w+", text)
+        #matches = re.finditer(ur'[\u4e00-\u9fff]+|[a-zA-Z]+|[0-9]]', text)
+        matches = re.finditer('[^ ]', text)
         for match in matches:
             wrdindex_list.append((match.group(), match.start()))
         return [TokenSequence(i/w, wrdindex_list[i:i+w])
@@ -465,11 +473,12 @@ def smooth(x,window_len=11,window='flat'):
 def demo(text=None):
     from nltk.corpus import brown
     from matplotlib import pylab
-    tt = TextTilingTokenizer(w=10,k=3,demo_mode=True)
+    tt = TextTilingTokenizer(w=10,k=8,demo_mode=True)
     with open('flypaper_short.txt', 'r') as file:
         text = file.read()
     if text is None: text = brown.raw()[:10000]
     s, ss, d, b = tt.tokenize(text)
+    print(b)
     pylab.xlabel("Sentence Gap index")
     pylab.ylabel("Gap Scores")
     pylab.plot(range(len(s)), s, label="Gap Scores")
