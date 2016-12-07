@@ -16,6 +16,7 @@ except ImportError:
     pass
 
 from nltk.tokenize.api import TokenizerI
+
 BLOCK_COMPARISON, VOCABULARY_INTRODUCTION = 0, 1
 LC, HC = 0, 1
 DEFAULT_SMOOTHING = [0]
@@ -53,11 +54,11 @@ class TextTilingTokenizer(TokenizerI):
       `HC` (default) or `LC`
     :type cutoff_policy: constant
 
-    >>> from nltk.corpus import brown
-    >>> tt = TextTilingTokenizer(demo_mode=True)
-    >>> text = brown.raw()[:10000]
-    >>> s, ss, d, b = tt.tokenize(text)
-    >>> b
+   # >>> from nltk.corpus import brown
+    #>>> tt = TextTilingTokenizer(demo_mode=True)
+    #>>> text = brown.raw()[:10000]
+    #>>> s, ss, d, b = tt.tokenize(text)
+    #>>> b
     [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
      0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0,
      0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
@@ -94,15 +95,25 @@ class TextTilingTokenizer(TokenizerI):
         # Remove punctuation
         #nopunct_text = ''.join(c for c in lowercase_text
                                #if re.match("[a-z\-\' \n\t]", c))
+        import re
+        import sys
+        import jieba
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
+        #text = '哈哈哈哈，简直丧心病狂 233333 @——@\n哪有什么方法？\n这也对！没有路线：的故事。'
+        sentences = text.splitlines() #split into lines
+        no_punctuation_sentences = []
+        for sent in sentences:
+            tokens = jieba.cut(sent)#lines to words
+            sent = (" ".join(tokens))
+            no_punctuation_sent = re.sub(ur"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）：；《）《》“”()»〔〕-]+", " ",
+                                         sent.decode("utf-8"))#remove punctuations
+            print(no_punctuation_sent)
+            no_punctuation_sentences.append(no_punctuation_sent)#add no punctuation lines to a list
 
-        print('========== nopunct text')
-        print(text)
-        nopunct_par_breaks = self._mark_paragraph_breaks(text)
-        print('==========in tokenize')
-        print(nopunct_par_breaks)
+        nopunct_text = '\n'.join(no_punctuation_sentences)#convert list to a string with '\n' separater
 
-        nopunct_text = re.sub(ur"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）：；《）《》“”()»〔〕-]+", " ",
-                              lowercase_text.decode("utf-8"))
+        nopunct_par_breaks = self._mark_paragraph_breaks(nopunct_text)
 
         tokseqs = self._divide_to_tokensequences(nopunct_text)
 
@@ -208,23 +219,19 @@ class TextTilingTokenizer(TokenizerI):
         """Identifies indented text or line breaks as the beginning of
         paragraphs"""
 
-        MIN_PARAGRAPH = 10 # minimum length of a paragraph
-        #pattern = re.compile("[ \t\r\f\v]*\n[ \t\r\f\v]*\n[ \t\r\f\v]*")
-        pattern = re.compile("\n")
+        MIN_PARAGRAPH = 100
+        pattern = re.compile("[ \t\r\f\v]*\n[ \t\r\f\v]*\n[ \t\r\f\v]*")
         matches = pattern.finditer(text)
 
         last_break = 0
         pbreaks = [0]
         for pb in matches:
-
-            print(pb.start())
             if pb.start()-last_break < MIN_PARAGRAPH:
                 continue
             else:
                 pbreaks.append(pb.start())
                 last_break = pb.start()
-        print('==========in mark_paragraph_breaks')
-        print(pbreaks)
+
         return pbreaks
 
     def _divide_to_tokensequences(self, text):
@@ -238,17 +245,13 @@ class TextTilingTokenizer(TokenizerI):
                 for i in range(0, len(wrdindex_list), w)]
 
     def _create_token_table(self, token_sequences, par_breaks):
-        print('==========in create_token_table')
-        print(par_breaks)
         "Creates a table of TokenTableFields"
-        #<token, blockID, occurrence_of_token>
         token_table = {}
         current_par = 0
         current_tok_seq = 0
         pb_iter = par_breaks.__iter__()
         current_par_break = next(pb_iter)
         if current_par_break == 0:
-
             try:
                 current_par_break = next(pb_iter) #skip break at 0
             except StopIteration:
@@ -462,55 +465,11 @@ def smooth(x,window_len=11,window='flat'):
 def demo(text=None):
     from nltk.corpus import brown
     from matplotlib import pylab
-    import jieba
-    import sys
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
-
-
+    tt = TextTilingTokenizer(w=10,k=3,demo_mode=True)
     with open('flypaper_short.txt', 'r') as file:
-        comments = file.read()
-    # segment the word
-    seg_list = jieba.cut(comments)
-    text = (" ".join(seg_list))
-
-     #print(text)
-    pattern = re.compile("\n")
-    matches = pattern.finditer(text)
-    #for match in matches:
-        #print(match.start())
-
-    MIN_PARAGRAPH = 100  # minimum length of a paragraph
-    last_break = 0
-    pbreaks = [0]
-    for pb in matches:
-
-        if pb.start() - last_break < MIN_PARAGRAPH:
-            continue
-        else:
-            pbreaks.append(pb.start())
-            last_break = pb.start()
-    print(pbreaks)
-
-    pb_iter = pbreaks.__iter__()
-    current_par_break = next(pb_iter)
-    if current_par_break == 0:
-        try:
-            current_par_break = next(pb_iter)  # skip break at 0
-        except StopIteration:
-            raise ValueError(
-                "No paragraph breaks were found(text too short perhaps?)"
-            )
-
-
-
-
-
-
-    tt = TextTilingTokenizer(w=10, k=3,demo_mode=True)
-    #if text is None: text = brown.raw()[:10000]
+        text = file.read()
+    if text is None: text = brown.raw()[:10000]
     s, ss, d, b = tt.tokenize(text)
-    print(b)
     pylab.xlabel("Sentence Gap index")
     pylab.ylabel("Gap Scores")
     pylab.plot(range(len(s)), s, label="Gap Scores")
@@ -519,7 +478,5 @@ def demo(text=None):
     pylab.stem(range(len(b)), b)
     pylab.legend()
     pylab.show()
-
-
 
 demo()
